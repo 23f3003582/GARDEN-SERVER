@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Garden Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 30px; background: #f0f4f0; }
+        .card { background: white; padding: 20px; border-radius: 10px; 
+                margin: 10px 0; font-size: 1.4em; }
+        button { padding: 15px 30px; font-size: 1.2em; 
+                 background: #2196F3; color: white; 
+                 border: none; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>🌱 Garden Monitor</h2>
+
+    <div class="card">💧 Moisture: <b id="moisture">--</b>%</div>
+    <div class="card">🌡️ Temp: <b id="temp">--</b>°C</div>
+    <div class="card">💦 Humidity: <b id="humidity">--</b>%</div>
+    <div class="card">⚙️ Pump: <b id="pump">--</b></div>
+
+    <br>
+    <button onclick="startPump()">💧 Start Pump Now</button>
+    <p id="status"></p>
+
+<script>
+    const API = "http://localhost:3000";  // ← change this
+
+    // Refresh sensor data every 2 seconds
+    setInterval(async () => {
+        const data = await fetch(API + "/api/data").then(r => r.json());
+        if (!data.length) return;
+        const d = data[0];  // latest reading
+        document.getElementById("moisture").textContent = d.moisture;
+        document.getElementById("temp").textContent     = d.temp;
+        document.getElementById("humidity").textContent = d.humidity;
+        document.getElementById("pump").textContent     = d.pump ? "🟢 ON" : "🔴 OFF";
+    }, 2000);
+
+    // Send pump command
+    async function startPump() {
+        await fetch(API + "/api/command", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ startPump: true })
+        });
+        document.getElementById("status").textContent = "✅ Command sent!";
+        setTimeout(() => document.getElementById("status").textContent = "", 3000);
+    }
+</script>
+</body>
+</html>
