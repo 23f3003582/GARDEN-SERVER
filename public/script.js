@@ -74,20 +74,21 @@ async function loadLastReading() {
 // ── Pump toggle ──
 async function togglePump(state) {
     if (state === 'on') {
-        try {
-            await fetch(API + "/api/command", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ startPump: true })
-            });
-            showToast('💧 Pump ON command sent!');
-            setPumpUI(true);
-        } catch (e) {
-            showToast('❌ Failed to send command');
-        }
+        await fetch(API + "/api/command", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ startPump: true })
+        });
+        showToast('💧 Pump ON command sent!');
+        setPumpUI(true);
     } else {
+        await fetch(API + "/api/command", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stopPump: true })
+        });
+        showToast('🛑 Pump OFF command sent!');
         setPumpUI(false);
-        showToast('Pump OFF (auto-control active)');
     }
 }
 
