@@ -49,8 +49,16 @@ app.post('/api/data', async (req, res) => {
 
 // ESP32 polls for command
 app.get('/api/command', (req, res) => {
-    res.json(pendingCommand ?? { startPump: false });
+    res.json(pendingCommand ?? { startPump: false, stopPump: false });
     pendingCommand = null;
+});
+
+// Browser sends pump command
+app.post('/api/command', (req, res) => {
+    const { startPump, stopPump } = req.body;
+    if (startPump) pendingCommand = { startPump: true,  stopPump: false };
+    if (stopPump)  pendingCommand = { startPump: false, stopPump: true  };
+    res.json({ queued: true });
 });
 
 // Browser sends pump command
