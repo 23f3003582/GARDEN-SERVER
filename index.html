@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+   
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-leaf"></i></div>
+                <h1>Garden status</h1>
+            </div>
+            <div class="header-right">
+                <div class="status">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+                <span class="last-updated" id="lastUpdated">No data yet</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="metrics-grid">
+                <!-- Temperature -->
+                <div class="metric-card">
+                    <div class="metric-icon temp">
+                        <i class="fa-solid fa-temperature-half"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Temperature</h3>
+                        <div class="metric-value" id="tempValue">--<span class="unit">°C</span></div>
+                    </div>
+                </div>
+
+                <!-- Humidity -->
+                <div class="metric-card">
+                    <div class="metric-icon humidity">
+                        <i class="fa-solid fa-droplet"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Humidity</h3>
+                        <div class="metric-value" id="humidityValue">--<span class="unit">%</span></div>
+                    </div>
+                </div>
+
+                <!-- Soil Moisture -->
+                <div class="metric-card">
+                    <div class="metric-icon moisture">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Soil Moisture</h3>
+                        <div class="metric-value" id="moistureValue">--<span class="unit">%</span></div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="moistureBar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pump Control -->
+            <div class="controls-section">
+                <div class="controls-header">
+                    <h2>Water Pump Control</h2>
+                    <span class="pump-status" id="pumpStatus">Currently: --</span>
+                </div>
+                <div class="pump-controls">
+                    <button class="btn btn-on" id="btnOn" onclick="togglePump('on')">
+                        <i class="fa-solid fa-power-off"></i> Turn ON
+                    </button>
+                    <button class="btn btn-off" id="btnOff" onclick="togglePump('off')">
+                        <i class="fa-solid fa-power-off"></i> Turn OFF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <h2>Automation & Settings</h2>
+                </div>
+                <div class="settings-grid">
+                    <!-- Pump Speed (UI only — no hardware PWM yet) -->
+                    <div class="setting-card">
+                        <div class="setting-info">
+                            <h3>Pump Speed</h3>
+                            <span class="setting-value" id="speedValue">80%</span>
+                        </div>
+                        <input type="range" class="slider speed-slider" id="pumpSpeed" min="0" max="100" value="80" oninput="updateSpeed(this.value)">
+                        <p class="setting-desc">Adjust the flow rate of the water pump.</p>
+                    </div>
+
+                    <!-- Moisture Threshold -->
+                    <div class="setting-card">
+                        <div class="setting-info">
+                            <h3>Moisture Threshold</h3>
+                            <span class="setting-value threshold-val" id="thresholdValue">30%</span>
+                        </div>
+                        <input type="range" class="slider moisture-slider" id="moistureThreshold" min="0" max="100" value="30" oninput="updateThreshold(this.value)">
+                        <p class="setting-desc">Auto-water below this moisture level.</p>
+                    </div>
+
+                    <!-- Pump Schedule -->
+                    <div class="setting-card schedule-card">
+                        <h3>Pump Schedule</h3>
+                        <div class="schedule-inputs">
+                            <div class="input-group">
+                                <label for="startTime">Start Time</label>
+                                <input type="time" id="startTime" value="08:00">
+                            </div>
+                            <div class="input-group">
+                                <label for="duration">Duration (m)</label>
+                                <input type="number" id="duration" min="1" max="60" value="10">
+                            </div>
+                        </div>
+                        <button class="btn-save" onclick="saveSchedule()">Save Schedule</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
