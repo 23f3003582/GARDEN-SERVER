@@ -1,52 +1,296 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Garden Dashboard</title>
-    <style>
-        body { font-family: sans-serif; padding: 30px; background: #f0f4f0; }
-        .card { background: white; padding: 20px; border-radius: 10px; 
-                margin: 10px 0; font-size: 1.4em; }
-        button { padding: 15px 30px; font-size: 1.2em; 
-                 background: #2196F3; color: white; 
-                 border: none; border-radius: 8px; cursor: pointer; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
 </head>
 <body>
-    <h2>🌱 Garden Monitor</h2>
+    <div class="dashboard-container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-leaf"></i></div>
+                <h1>Garden status</h1>
+            </div>
+            <div class="header-right">
+                <div class="status">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+                <span class="last-updated" id="lastUpdated">No data yet</span>
+            </div>
+        </header>
 
-    <div class="card">💧 Moisture: <b id="moisture">--</b>%</div>
-    <div class="card">🌡️ Temp: <b id="temp">--</b>°C</div>
-    <div class="card">💦 Humidity: <b id="humidity">--</b>%</div>
-    <div class="card">⚙️ Pump: <b id="pump">--</b></div>
+        <main class="main-content">
+            <div class="metrics-grid">
+                <!-- Temperature -->
+                <div class="metric-card">
+                    <div class="metric-icon temp">
+                        <i class="fa-solid fa-temperature-half"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Temperature</h3>
+                        <div class="metric-value" id="tempValue">--<span class="unit">°C</span></div>
+                    </div>
+                </div>
 
-    <br>
-    <button onclick="startPump()">💧 Start Pump Now</button>
-    <p id="status"></p>
+                <!-- Humidity -->
+                <div class="metric-card">
+                    <div class="metric-icon humidity">
+                        <i class="fa-solid fa-droplet"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Humidity</h3>
+                        <div class="metric-value" id="humidityValue">--<span class="unit">%</span></div>
+                    </div>
+                </div>
 
-<script>
-    const API = "https://garden-server-j643.onrender.com";  // ← change this
+                <!-- Soil Moisture -->
+                <div class="metric-card">
+                    <div class="metric-icon moisture">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Soil Moisture</h3>
+                        <div class="metric-value" id="moistureValue">--<span class="unit">%</span></div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="moistureBar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    // Refresh sensor data every 2 seconds
-    setInterval(async () => {
-        const data = await fetch(API + "/api/data").then(r => r.json());
-        if (!data.length) return;
-        const d = data[0];  // latest reading
-        document.getElementById("moisture").textContent = d.moisture;
-        document.getElementById("temp").textContent     = d.temp;
-        document.getElementById("humidity").textContent = d.humidity;
-        document.getElementById("pump").textContent     = d.pump ? "🟢 ON" : "🔴 OFF";
-    }, 2000);
+            <!-- Pump Control -->
+            <div class="controls-section">
+                <div class="controls-header">
+                    <h2>Water Pump Control</h2>
+                    <span class="pump-status" id="pumpStatus">Currently: --</span>
+                </div>
+                <div class="pump-controls">
+                    <button class="btn btn-on" id="btnOn" onclick="togglePump('on')">
+                        <i class="fa-solid fa-power-off"></i> Turn ON
+                    </button>
+                    <button class="btn btn-off" id="btnOff" onclick="togglePump('off')">
+                        <i class="fa-solid fa-power-off"></i> Turn OFF
+                    </button>
+                </div>
+            </div>
 
-    // Send pump command
-    async function startPump() {
-        await fetch(API + "/api/command", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ startPump: true })
-        });
-        document.getElementById("status").textContent = "✅ Command sent!";
-        setTimeout(() => document.getElementById("status").textContent = "", 3000);
-    }
-</script>
+            <!-- Settings -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <h2>Automation & Settings</h2>
+                </div>
+                <div class="settings-grid">
+                    <!-- Pump Speed (UI only — no hardware PWM yet) -->
+                    <div class="setting-card">
+                        <div class="setting-info">
+                            <h3>Pump Speed</h3>
+                            <span class="setting-value" id="speedValue">80%</span>
+                        </div>
+                        <input type="range" class="slider speed-slider" id="pumpSpeed" min="0" max="100" value="80" oninput="updateSpeed(this.value)">
+                        <p class="setting-desc">Adjust the flow rate of the water pump.</p>
+                    </div>
+
+                    <!-- Moisture Threshold -->
+                    <div class="setting-card">
+                        <div class="setting-info">
+                            <h3>Moisture Threshold</h3>
+                            <span class="setting-value threshold-val" id="thresholdValue">30%</span>
+                        </div>
+                        <input type="range" class="slider moisture-slider" id="moistureThreshold" min="0" max="100" value="30" oninput="updateThreshold(this.value)">
+                        <p class="setting-desc">Auto-water below this moisture level.</p>
+                    </div>
+
+                    <!-- Pump Schedule -->
+                    <div class="setting-card schedule-card">
+                        <h3>Pump Schedule</h3>
+                        <div class="schedule-inputs">
+                            <div class="input-group">
+                                <label for="startTime">Start Time</label>
+                                <input type="time" id="startTime" value="08:00">
+                            </div>
+                            <div class="input-group">
+                                <label for="duration">Duration (m)</label>
+                                <input type="number" id="duration" min="1" max="60" value="10">
+                            </div>
+                        </div>
+                        <button class="btn-save" onclick="saveSchedule()">Save Schedule</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API = "https://garden-server-j643.onrender.com";
+        const WS  = "wss://garden-server-j643.onrender.com";
+
+        // ── DOM refs ──
+        const statusDot    = document.getElementById('statusDot');
+        const statusText   = document.getElementById('statusText');
+        const lastUpdated  = document.getElementById('lastUpdated');
+        const tempValue    = document.getElementById('tempValue');
+        const humidityValue = document.getElementById('humidityValue');
+        const moistureValue = document.getElementById('moistureValue');
+        const moistureBar  = document.getElementById('moistureBar');
+        const pumpStatus   = document.getElementById('pumpStatus');
+        const btnOn        = document.getElementById('btnOn');
+        const btnOff       = document.getElementById('btnOff');
+
+        // ── Update UI with sensor data ──
+        function updateUI(d) {
+            // Temperature
+            tempValue.innerHTML = `${parseFloat(d.temp).toFixed(1)}<span class="unit">°C</span>`;
+
+            // Humidity
+            humidityValue.innerHTML = `${d.humidity}<span class="unit">%</span>`;
+
+            // Moisture
+            const m = d.moisture ?? 0;
+            moistureValue.innerHTML = `${m}<span class="unit">%</span>`;
+            moistureBar.style.width = `${m}%`;
+
+            // Pump state
+            const isOn = d.pump === 1 || d.pumpRunning === true;
+            setPumpUI(isOn);
+
+            // Last updated
+            const now = new Date();
+            lastUpdated.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+
+            // Online
+            setOnline(true);
+        }
+
+        function setPumpUI(isOn) {
+            if (isOn) {
+                btnOn.classList.add('active');
+                btnOff.classList.remove('active');
+                pumpStatus.textContent = 'Currently: ON';
+                pumpStatus.style.color = 'var(--accent-green)';
+            } else {
+                btnOff.classList.add('active');
+                btnOn.classList.remove('active');
+                pumpStatus.textContent = 'Currently: OFF';
+                pumpStatus.style.color = 'var(--text-secondary)';
+            }
+        }
+
+        function setOnline(online) {
+            if (online) {
+                statusDot.className = 'status-dot online';
+                statusText.textContent = 'ESP32 Connected';
+            } else {
+                statusDot.className = 'status-dot offline';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+
+        // ── WebSocket ──
+        let ws;
+
+        function connectWS() {
+            ws = new WebSocket(WS);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                setOnline(true);
+            };
+
+            ws.onmessage = (event) => {
+                const d = JSON.parse(event.data);
+                updateUI(d);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected, retrying in 3s...');
+                setOnline(false);
+                setTimeout(connectWS, 3000);  // auto reconnect
+            };
+
+            ws.onerror = () => {
+                ws.close();
+            };
+        }
+
+        // ── Load last reading on page open (before WS gets first push) ──
+        async function loadLastReading() {
+            try {
+                const data = await fetch(API + "/api/data").then(r => r.json());
+                if (data && data.length > 0) updateUI(data[0]);
+            } catch (e) {
+                console.log('Could not load initial data:', e);
+            }
+        }
+
+        // ── Pump toggle ──
+        async function togglePump(state) {
+            if (state === 'on') {
+                try {
+                    await fetch(API + "/api/command", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ startPump: true })
+                    });
+                    showToast('💧 Pump ON command sent!');
+                    setPumpUI(true);
+                } catch (e) {
+                    showToast('❌ Failed to send command');
+                }
+            } else {
+                // OFF command — show UI change immediately
+                // ESP32 will stop pump on next auto-watering check
+                setPumpUI(false);
+                showToast('Pump OFF (auto-control active)');
+            }
+        }
+
+        // ── Sliders ──
+        function updateSpeed(value) {
+            document.getElementById('speedValue').textContent = value + '%';
+        }
+
+        function updateThreshold(value) {
+            document.getElementById('thresholdValue').textContent = value + '%';
+        }
+
+        // ── Schedule ──
+        function saveSchedule() {
+            const time     = document.getElementById('startTime').value;
+            const duration = document.getElementById('duration').value;
+            // Save to localStorage for persistence
+            localStorage.setItem('scheduleTime', time);
+            localStorage.setItem('scheduleDuration', duration);
+            showToast(`📅 Schedule saved: ${time} for ${duration} min`);
+        }
+
+        // Load saved schedule on page open
+        function loadSchedule() {
+            const time     = localStorage.getItem('scheduleTime');
+            const duration = localStorage.getItem('scheduleDuration');
+            if (time)     document.getElementById('startTime').value    = time;
+            if (duration) document.getElementById('duration').value     = duration;
+        }
+
+        // ── Toast ──
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ── Init ──
+        loadLastReading();
+        connectWS();
+        loadSchedule();
+    </script>
 </body>
 </html>
