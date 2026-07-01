@@ -69,7 +69,8 @@ app.post('/api/command', (req, res) => {
 
 // Browser reads history
 app.get('/api/data', (req, res) => {
-    const rows = db.data.readings.slice(-100).reverse();
+    const limit = parseInt(req.query.limit) || 100;
+    const rows = db.data.readings.slice(-limit).reverse();
     res.json(rows);
 });
 
